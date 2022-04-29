@@ -76,13 +76,9 @@ if __name__ == '__main__':
         file_size = Label(file_frame, text=str(file.size))
         file_name.pack(side=LEFT)
         file_size.pack(side=LEFT)
-        # file_name.grid(row=0, column=0, columnspan=2, sticky=W)
-        # file_size.grid(row=1, column=0)
 
         inner_frame = LabelFrame(file_frame, padx=3, pady=3)
-        # inner_frame.grid(row=1, column=1)
         inner_frame.pack(side=RIGHT)
-        # inner_frame.pack_propagate(False)
 
         button_download = Button(inner_frame, text='↓', command=lambda: download_file(file))
         button_delete = Button(inner_frame, text='X', command=lambda: delete_file(file))
@@ -145,29 +141,4 @@ if __name__ == '__main__':
     button_upload_file.grid(row=0, column=2)
     button_upload_folder.grid(row=0, column=3)
 
-    # enter_path()
-
     mainloop()
-
-    # devices = get_adb_devices()
-    #
-    # for i in range(len(devices)):
-    #     print(f'{i}:{devices[i]}')
-    #
-    # # selected = 0
-    # try:
-    #     selected = int(input("Input device number:"))
-    #     if selected > len(devices) - 1:
-    #         raise IndexError
-    # except Exception:
-    #     print("wrong id")
-    #     sys.exit(-1)
-    #
-    # device = AdbDevice(devices[selected])
-    # # device = AdbDevice('4TLZXWNBR8Q8CUE6')
-    #
-    # for item in device.get_list('/sdcard/'):
-    #     print(item)
-    #
-    # # device.pull_file('/sdcard/temp/', './temp_in/')
-    # # device.push_file('./temp_out/test.txt', '/sdcard/temp')
