@@ -11,4 +11,5 @@ FILE_ITEM_CONFIG = {
     'width': 250,
     'height': 100,
     'max_display_name_length': 70,
+    'show_directory_item_count': False
 }

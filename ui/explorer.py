@@ -2,7 +2,7 @@ import itertools
 import os.path
 from math import floor
 from tkinter import *
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, ttk
 
 from adb_device import AdbDevice
 from config import *
@@ -34,6 +34,28 @@ def explorer(device_name, root: Tk):
     base_view_frame.pack(fill=BOTH, expand=1)
     view_items = []
 
+    view_frame = LabelFrame(base_view_frame, text='View Frame')
+    view_frame.pack(fill=BOTH, expand=1)
+
+    view_canvas = Canvas(view_frame)
+    view_canvas.pack(side=LEFT, fill=Y)
+
+    view_scrollbar = ttk.Scrollbar(view_frame, orient=VERTICAL, command=view_canvas.yview)
+    view_scrollbar.pack(side=RIGHT, fill=Y)
+
+    view_canvas.configure(yscrollcommand=view_scrollbar.set)
+    view_canvas.bind('<Configure>', lambda e: view_canvas.configure(scrollregion=view_canvas.bbox("all")))
+
+    def on_mouse_wheel(event):
+        view_canvas.yview_scroll(-1 * int((event.delta / 120)), "units")
+
+    view_canvas.bind_all("<MouseWheel>", on_mouse_wheel)
+
+    view_scrollable_frame = LabelFrame(view_frame, text='Scrollable Frame', padx=10, pady=10)
+    view_scrollable_frame.pack(fill=BOTH, expand=1, padx=30, pady=30)
+
+    view_canvas.create_window((0, 0), window=view_scrollable_frame, anchor="nw")
+
     def file_ui_position_generator():
         column_max = floor(root.winfo_width() / (FILE_ITEM_CONFIG['width'] + 10))
         for r in itertools.count(0):
@@ -52,7 +74,7 @@ def explorer(device_name, root: Tk):
             enter_path()
 
     def get_file_ui_element(file: File):
-        file_item_frame = LabelFrame(base_view_frame, text=file.get_type(), padx=3, pady=3,
+        file_item_frame = LabelFrame(view_scrollable_frame, text=file.get_type(), padx=3, pady=3,
                                      width=FILE_ITEM_CONFIG['width'],
                                      height=FILE_ITEM_CONFIG['height'])
         file_item_frame.pack_propagate(False)
@@ -64,8 +86,16 @@ def explorer(device_name, root: Tk):
 
         file_name = Label(file_item_frame, text=f_name, wraplength=FILE_ITEM_CONFIG['width'] - 10, anchor=NW)
         file_name.pack(fill=X)
-        file_size = Label(file_item_frame, text=file.get_readable_size())
-        file_size.pack(side=LEFT)
+
+        if file.is_file:
+            info = file.get_readable_size()
+        elif FILE_ITEM_CONFIG['show_directory_item_count']:
+            info = f'({device.get_item_count_inside(file)})'
+        else:
+            info = ''
+
+        file_info = Label(file_item_frame, text=info)
+        file_info.pack(side=LEFT)
 
         button_download = Button(file_item_frame, text='↓', command=lambda: download_file(file))
         button_delete = Button(file_item_frame, text='X', command=lambda: delete_file(file))
@@ -92,7 +122,12 @@ def explorer(device_name, root: Tk):
             label.grid(row=r_w[0], column=r_w[1], sticky=W)
             view_items.append(label)
 
-        bottom_bar_text.set(f'Total {len(device.children)} item(s), {device.get_children_size()}B')
+        total = device.get_children_count()
+        dir_count = device.get_directory_count_inside_children()
+        file_count = total - dir_count
+        size = File.parse_readable_size(device.get_children_size_sum())
+
+        bottom_bar_text.set(f'Total {total} item(s), {dir_count} folder(s), {file_count} file(s), {size}')
 
     def enter_path_with_obj(obj: File):
         if not obj.is_file:

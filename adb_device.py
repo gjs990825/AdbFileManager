@@ -82,8 +82,19 @@ class AdbDevice:
         if result.returncode != 0:
             raise Exception('adb disconnect operation failed')
 
-    def get_children_size(self):
-        return sum(child.size for child in self.children)
+    def get_directory_count_inside_children(self):
+        return sum(0 if child.is_file else 1 for child in self.children)
+
+    def get_children_count(self):
+        return len(self.children)
+
+    def get_children_size_sum(self):
+        return sum(child.size if child.is_file else 0 for child in self.children)
+
+    def get_item_count_inside(self, file: File):
+        if not file.is_file:
+            return len(AdbDevice(self.name, file.get_full_path()).children)
+        return -1
 
     def pull_file(self, from_dir, to_dir):
         cmd = self.compose_cmd('pull', from_dir, to_dir)
