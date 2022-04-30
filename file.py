@@ -27,13 +27,35 @@ class File:
         return cls(path, name, is_file, size, date_time)
 
     def __str__(self):
-        return f'[{self.get_type_mark()}] {self.get_full_path()} {self.size}B {self.date_time}'
+        return f'[{self.get_type_mark()}] {self.get_full_path()} {self.get_readable_size()}B {self.date_time}'
+
+    @staticmethod
+    def parse_readable_size(size_in_byte):
+        units = ('B', 'KB', 'MB', 'GB')  # , 'TB', 'PB', 'EB', 'ZB', 'YB')
+        for unit in units:
+            if size_in_byte < 1024:
+                return '%.1f %s' % (size_in_byte, unit)
+            else:
+                size_in_byte /= 1024
+        return 'unknown size'
+
+    def get_readable_size(self):
+        if not self.is_file:
+            return ''
+        return self.parse_readable_size(self.size)
 
     def get_type_mark(self):
         if self.is_file:
             identifier = 'F'
         else:
             identifier = 'D'
+        return identifier
+
+    def get_type(self):
+        if self.is_file:
+            identifier = 'File'
+        else:
+            identifier = 'Directory'
         return identifier
 
     def get_simple_name(self):
