@@ -4,6 +4,7 @@ APP_CONFIG = {
     'default_root': '/sdcard/DCIM',
     'max_size': (1920, 900),
     'min_size': (700, 500),
+    'device_selection_min_size': (400, 300),
 }
 
 FILE_ITEM_CONFIG = {

@@ -10,16 +10,14 @@ logging.getLogger().setLevel(logging.INFO)
 
 if __name__ == '__main__':
     root = Tk()
-    # root.minsize(*APP_CONFIG['min_size'])
+    root.minsize(*APP_CONFIG['device_selection_min_size'])
     root.title(f'Select a device - {APP_CONFIG["app_name"]}')
     root.iconbitmap(APP_CONFIG['icon'])
 
-    devices = AdbDevice.get_adb_devices()
     device_buttons = {}
 
-    devices_frame = LabelFrame(root, text='Attached adb devices:', padx=3, pady=3, width=300, height=200)
-    devices_frame.grid_propagate(False)
-    devices_frame.grid(row=1, column=0, columnspan=4, sticky=W, padx=10, pady=10)
+    devices_frame = LabelFrame(root, text='Attached adb devices:', padx=3, pady=3)
+    devices_frame.pack(side=BOTTOM, fill=BOTH, expand=1, padx=3, pady=3)
 
 
     def launch(device_name):
@@ -32,15 +30,13 @@ if __name__ == '__main__':
 
 
     def refresh_devices():
-        global devices
-
         devices = AdbDevice.get_adb_devices()
         for device in devices:
             if device not in device_buttons.keys():
                 print(device)
-                d_button = Button(devices_frame, text=device, command=lambda: launch(device))
-                d_button.grid(sticky=W)
-                device_buttons[device] = d_button
+                button = Button(devices_frame, text=device, command=lambda: launch(device))
+                button.pack(fill=X)
+                device_buttons[device] = button
 
 
     def connect_via_network():
@@ -63,10 +59,10 @@ if __name__ == '__main__':
     button_disconnect = Button(root, text='>/<', command=disconnect_devices)
     button_refresh_device = Button(root, text='Refresh', command=refresh_devices)
 
-    address_input.grid(row=0, column=0)
-    button_connect_via_address.grid(row=0, column=1)
-    button_disconnect.grid(row=0, column=2)
-    button_refresh_device.grid(row=0, column=3)
+    address_input.pack(side=LEFT, fill=X, expand=1)
+    button_refresh_device.pack(side=RIGHT)
+    button_disconnect.pack(side=RIGHT)
+    button_connect_via_address.pack(side=RIGHT)
 
     refresh_devices()
 
