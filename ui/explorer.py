@@ -9,6 +9,16 @@ from config import *
 from file import File
 
 
+# not works when window size fixed(full screen, max/min size)
+# fix scrollbar issue
+def scrollbar_util(root: Tk):
+    # width x height + x + y
+    w, h = [int(i) for i in root.geometry().split('+')[0].split('x')]
+    root.geometry(f'{w}x{h - 5}')
+    root.update()
+    root.geometry(f'{w}x{h}')
+
+
 def explorer(device_name, root: Tk):
     device = AdbDevice(device_name, APP_CONFIG['default_root'])
     root.title(APP_CONFIG['app_name'])
@@ -16,32 +26,33 @@ def explorer(device_name, root: Tk):
     root.minsize(*APP_CONFIG['min_size'])
     root.maxsize(*APP_CONFIG['max_size'])
     root.title(f'{device.name} - {APP_CONFIG["app_name"]}')
-    root.geometry('800x600')
+    root.geometry(APP_CONFIG["default_size"])
 
-    header_frame = LabelFrame(root, text='Header', padx=10, pady=10)
+    header_frame = Frame(root, padx=3, pady=3)
     header_frame.pack(fill=X, anchor=N)
-    footer_frame = LabelFrame(root, text='Footer')
+    footer_frame = Frame(root)
     footer_frame.pack(fill=X, anchor=S, side=BOTTOM)
 
     address_bar_text = StringVar(header_frame, device.current_dir)
-    bottom_bar_text = StringVar(header_frame)
+    footer_text = StringVar(header_frame)
     address_bar = Entry(header_frame, textvariable=address_bar_text, borderwidth=3)
     address_bar.pack(fill=X, expand=1, side=LEFT)
-    bottom_bar = Label(footer_frame, textvariable=bottom_bar_text, borderwidth=10)
-    bottom_bar.grid(row=1, column=0, columnspan=4, sticky=W)
+    footer = Label(footer_frame, textvariable=footer_text, borderwidth=10)
+    footer.grid(row=1, column=0, columnspan=4, sticky=W)
 
-    base_view_frame = LabelFrame(root, text='Base View Frame', padx=10, pady=10)
+    base_view_frame = LabelFrame(root, text='Files', padx=10, pady=10)
     base_view_frame.pack(fill=BOTH, expand=1)
     view_items = []
 
-    view_frame = LabelFrame(base_view_frame, text='View Frame')
+    # view_frame = LabelFrame(base_view_frame, text='View Frame')
+    view_frame = Frame(base_view_frame)
     view_frame.pack(fill=BOTH, expand=1)
 
     view_canvas = Canvas(view_frame)
-    view_canvas.pack(side=LEFT, fill=Y)
+    view_canvas.pack(side=LEFT, fill=BOTH, expand=1)
 
     view_scrollbar = ttk.Scrollbar(view_frame, orient=VERTICAL, command=view_canvas.yview)
-    view_scrollbar.pack(side=RIGHT, fill=Y)
+    view_scrollbar.pack(side=RIGHT, fill=BOTH)
 
     view_canvas.configure(yscrollcommand=view_scrollbar.set)
     view_canvas.bind('<Configure>', lambda e: view_canvas.configure(scrollregion=view_canvas.bbox("all")))
@@ -51,13 +62,14 @@ def explorer(device_name, root: Tk):
 
     view_canvas.bind_all("<MouseWheel>", on_mouse_wheel)
 
-    view_scrollable_frame = LabelFrame(view_frame, text='Scrollable Frame', padx=10, pady=10)
-    view_scrollable_frame.pack(fill=BOTH, expand=1, padx=30, pady=30)
+    # view_scrollable_frame = LabelFrame(view_canvas, text='Scrollable Frame', padx=10, pady=10)
+    view_scrollable_frame = Frame(view_canvas)
+    view_scrollable_frame.pack(fill=BOTH, expand=1)
 
     view_canvas.create_window((0, 0), window=view_scrollable_frame, anchor="nw")
 
     def file_ui_position_generator():
-        column_max = floor(root.winfo_width() / (FILE_ITEM_CONFIG['width'] + 10))
+        column_max = floor(view_canvas.winfo_width() / (FILE_ITEM_CONFIG['width']))
         for r in itertools.count(0):
             for c in range(column_max):
                 yield r, c
@@ -127,7 +139,8 @@ def explorer(device_name, root: Tk):
         file_count = total - dir_count
         size = File.parse_readable_size(device.get_children_size_sum())
 
-        bottom_bar_text.set(f'Total {total} item(s), {dir_count} folder(s), {file_count} file(s), {size}')
+        footer_text.set(f'Total {total} item(s), {dir_count} folder(s), {file_count} file(s), {size}')
+        scrollbar_util(root)
 
     def enter_path_with_obj(obj: File):
         if not obj.is_file:
