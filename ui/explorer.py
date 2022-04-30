@@ -31,7 +31,6 @@ def explorer(device_name, root: Tk):
     def file_ui_position_generator():
         row_max = floor(root.winfo_height() / (FILE_ITEM_CONFIG['height'] + 10))
         column_max = floor(root.winfo_width() / (FILE_ITEM_CONFIG['width'] + 10))
-        print(root.winfo_height(), root.winfo_width())
         for r in range(row_max):
             for c in range(column_max):
                 yield r, c

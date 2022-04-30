@@ -20,7 +20,7 @@ if __name__ == '__main__':
 
     devices_frame = LabelFrame(root, text='Attached adb devices:', padx=3, pady=3, width=300, height=200)
     devices_frame.grid_propagate(False)
-    devices_frame.grid(row=1, column=0, columnspan=3, sticky=W, padx=10, pady=10)
+    devices_frame.grid(row=1, column=0, columnspan=4, sticky=W, padx=10, pady=10)
 
 
     def launch(device_name):
@@ -51,16 +51,21 @@ if __name__ == '__main__':
         else:
             messagebox.showwarning('Warning', 'Input an address first')
 
+    def disconnect_devices():
+        AdbDevice.disconnect()
+        refresh_devices()
 
     address_text = StringVar(root)
     address_input = Entry(root, textvariable=address_text, borderwidth=3, width=30)
-    button_connect_via_address = Button(root, text='>--<',
+    button_connect_via_address = Button(root, text='>-<',
                                         command=connect_via_network)
+    button_disconnect = Button(root, text='>/<', command=disconnect_devices)
     button_refresh_device = Button(root, text='Refresh', command=refresh_devices)
 
     address_input.grid(row=0, column=0)
     button_connect_via_address.grid(row=0, column=1)
-    button_refresh_device.grid(row=0, column=2)
+    button_disconnect.grid(row=0, column=2)
+    button_refresh_device.grid(row=0, column=3)
 
     refresh_devices()
 

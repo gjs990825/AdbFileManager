@@ -75,6 +75,13 @@ class AdbDevice:
         if result.returncode != 0:
             raise Exception('adb connection via network failed')
 
+    @staticmethod
+    def disconnect():
+        cmd = ['adb', 'disconnect']
+        result = command_run(cmd)
+        if result.returncode != 0:
+            raise Exception('adb disconnect operation failed')
+
     def get_children_size(self):
         return sum(child.size for child in self.children)
 
