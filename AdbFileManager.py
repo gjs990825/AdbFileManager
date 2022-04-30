@@ -1,5 +1,4 @@
 import logging
-import sys
 from tkinter import *
 from tkinter import messagebox
 
@@ -51,9 +50,11 @@ if __name__ == '__main__':
         else:
             messagebox.showwarning('Warning', 'Input an address first')
 
+
     def disconnect_devices():
         AdbDevice.disconnect()
         refresh_devices()
+
 
     address_text = StringVar(root)
     address_input = Entry(root, textvariable=address_text, borderwidth=3, width=30)

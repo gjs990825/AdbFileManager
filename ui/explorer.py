@@ -1,3 +1,4 @@
+import itertools
 import os.path
 from math import floor
 from tkinter import *
@@ -16,26 +17,28 @@ def explorer(device_name, root: Tk):
     root.maxsize(*APP_CONFIG['max_size'])
     root.title(f'{device.name} - {APP_CONFIG["app_name"]}')
 
-    address_bar_text = StringVar(root, device.current_dir)
-    bottom_bar_text = StringVar(root)
-    address_bar = Entry(root, textvariable=address_bar_text, borderwidth=3, width=100)
-    address_bar.grid(row=0, column=0, sticky=EW, padx=10, pady=10)
-    bottom_bar = Label(root, textvariable=bottom_bar_text, borderwidth=10)
-    bottom_bar.grid(row=2, column=0, columnspan=4, sticky=W)
+    head_frame = LabelFrame(root, text='Header', padx=10, pady=10)
+    head_frame.pack(fill=X, anchor=N)
+    foot_frame = LabelFrame(root, text='Footer', padx=10, pady=10)
+    foot_frame.pack(fill=X, anchor=S, side=BOTTOM)
 
-    view_frame = LabelFrame(root, text='Files', padx=10, pady=10, width=700, height=400)
+    address_bar_text = StringVar(head_frame, device.current_dir)
+    bottom_bar_text = StringVar(head_frame)
+    address_bar = Entry(head_frame, textvariable=address_bar_text, borderwidth=3)
+    address_bar.pack(fill=X, expand=1, side=LEFT)
+    bottom_bar = Label(foot_frame, textvariable=bottom_bar_text, borderwidth=10)
+    bottom_bar.grid(row=1, column=0, columnspan=4, sticky=W)
+
+    view_frame = LabelFrame(root, text='Files', padx=10, pady=10)
     view_frame.pack_propagate(False)
-    view_frame.grid(row=1, column=0, columnspan=4, padx=10, pady=10, sticky=EW)
+    view_frame.pack(fill=BOTH, expand=1)
     view_items = []
 
     def file_ui_position_generator():
-        row_max = floor(root.winfo_height() / (FILE_ITEM_CONFIG['height'] + 10))
         column_max = floor(root.winfo_width() / (FILE_ITEM_CONFIG['width'] + 10))
-        for r in range(row_max):
+        for r in itertools.count(0):
             for c in range(column_max):
                 yield r, c
-
-    # file_position_generator = file_ui_position_generator()
 
     def download_file(file: File):
         target = filedialog.askdirectory()
@@ -77,8 +80,6 @@ def explorer(device_name, root: Tk):
         return file_frame
 
     def enter_path():
-        # global file_position_generator
-
         file_position_generator = file_ui_position_generator()
         for item in view_items:
             item.grid_forget()
@@ -110,11 +111,20 @@ def explorer(device_name, root: Tk):
                 print(f'File push succeed:{file}')
         enter_path()
 
-    button_enter_path = Button(root, text='→/⚪', command=enter_path)
-    button_upload_file = Button(root, text='↑ File(s)', command=upload_files)
-    button_upload_folder = Button(root, text='↑ Folder')
-    button_enter_path.grid(row=0, column=1)
-    button_upload_file.grid(row=0, column=2)
-    button_upload_folder.grid(row=0, column=3)
+    def upload_folder():
+        folder_to_upload = filedialog.askdirectory(initialdir='./', title='Select a folder to upload')
+        if not os.path.exists(folder_to_upload):
+            raise FileNotFoundError()
+        else:
+            device.push_file(folder_to_upload)
+            print(f'Folder push succeed:{folder_to_upload}')
+        enter_path()
+
+    button_enter_path = Button(head_frame, text='→/⚪', command=enter_path)
+    button_upload_file = Button(head_frame, text='↑ File(s)', command=upload_files)
+    button_upload_folder = Button(head_frame, text='↑ Folder', command=upload_folder)
+    button_upload_folder.pack(side=RIGHT)
+    button_upload_file.pack(side=RIGHT)
+    button_enter_path.pack(side=RIGHT)
 
     mainloop()
