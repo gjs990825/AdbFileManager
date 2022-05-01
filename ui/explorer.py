@@ -36,7 +36,6 @@ def explorer(device, root: Tk):
     address_bar_text = StringVar(header_frame, adb_device.current_dir)
     footer_text = StringVar(header_frame)
     address_bar = Entry(header_frame, textvariable=address_bar_text, borderwidth=3)
-    address_bar.pack(fill=X, expand=1, side=LEFT)
     footer = Label(footer_frame, textvariable=footer_text, borderwidth=10)
     footer.grid(row=1, column=0, columnspan=4, sticky=W)
 
@@ -83,7 +82,7 @@ def explorer(device, root: Tk):
         result = messagebox.askokcancel('Confirm Deleting', f'{obj.name} will be deleted')
         if result:
             adb_device.delete_file(obj)
-            enter_path()
+            enter_with_address_bar_path()
 
     def get_file_ui_element(file: File):
         file_item_frame = LabelFrame(view_scrollable_frame, text=file.get_type(), padx=3, pady=3,
@@ -120,13 +119,13 @@ def explorer(device, root: Tk):
 
         return file_item_frame
 
-    def enter_path():
+    def refresh_view():
         file_position_generator = file_ui_position_generator()
         for item in view_items:
             item.grid_forget()
         view_items.clear()
 
-        items = adb_device.enter_folder(address_bar_text.get())
+        items = adb_device.children
 
         for item in items:
             label = get_file_ui_element(item)
@@ -140,13 +139,21 @@ def explorer(device, root: Tk):
         size = File.parse_readable_size(adb_device.get_children_size_sum())
 
         footer_text.set(f'Total {total} item(s), {dir_count} folder(s), {file_count} file(s), {size}')
+
+        button_back['state'] = NORMAL if adb_device.history.able_to_go_back() else DISABLED
+        button_forward['state'] = NORMAL if adb_device.history.able_to_go_forward() else DISABLED
+
         scrollbar_util(root)
+
+    def enter_with_address_bar_path():
+        adb_device.enter_folder(address_bar_text.get())
+        refresh_view()
 
     def enter_path_with_obj(obj: File):
         if not obj.is_file:
             print(obj)
             address_bar_text.set(obj.get_full_path())
-            enter_path()
+            enter_with_address_bar_path()
 
     def upload_files():
         files_to_upload = filedialog.askopenfilenames(initialdir='./', title='Select file(s) to Upload')
@@ -156,22 +163,39 @@ def explorer(device, root: Tk):
             else:
                 adb_device.push_file(file)
                 print(f'File push succeed:{file}')
-        enter_path()
+        enter_with_address_bar_path()
 
     def upload_folder():
         folder_to_upload = filedialog.askdirectory(initialdir='./', title='Select a folder to upload')
         if not os.path.exists(folder_to_upload):
-            raise FileNotFoundError()
+            if folder_to_upload != '':
+                raise FileNotFoundError()
         else:
             adb_device.push_file(folder_to_upload)
             print(f'Folder push succeed:{folder_to_upload}')
-        enter_path()
+        enter_with_address_bar_path()
 
-    button_enter_path = Button(header_frame, text='→/⚪', command=enter_path)
+    def go_back():
+        adb_device.go_back()
+        address_bar_text.set(adb_device.current_dir)
+        refresh_view()
+
+    def go_forward():
+        adb_device.go_forward()
+        address_bar_text.set(adb_device.current_dir)
+        refresh_view()
+
+    button_enter_path = Button(header_frame, text='GO', command=enter_with_address_bar_path)
     button_upload_file = Button(header_frame, text='↑ File(s)', command=upload_files)
     button_upload_folder = Button(header_frame, text='↑ Folder', command=upload_folder)
     button_upload_folder.pack(side=RIGHT)
     button_upload_file.pack(side=RIGHT)
     button_enter_path.pack(side=RIGHT)
+
+    button_back = Button(header_frame, text='←', command=go_back, state=DISABLED)
+    button_forward = Button(header_frame, text='→', command=go_forward, state=DISABLED)
+    button_back.pack(side=LEFT)
+    button_forward.pack(side=LEFT)
+    address_bar.pack(fill=X, expand=1, side=LEFT)
 
     mainloop()

@@ -40,23 +40,13 @@ class File:
         return 'unknown size'
 
     def get_readable_size(self):
-        if not self.is_file:
-            return ''
-        return self.parse_readable_size(self.size)
+        return self.parse_readable_size(self.size) if self.is_file else ''
 
     def get_type_mark(self):
-        if self.is_file:
-            identifier = 'F'
-        else:
-            identifier = 'D'
-        return identifier
+        return 'F' if self.is_file else 'D'
 
     def get_type(self):
-        if self.is_file:
-            identifier = 'File'
-        else:
-            identifier = 'Directory'
-        return identifier
+        return 'File' if self.is_file else 'Directory'
 
     def get_simple_name(self):
         return f'[{self.get_type_mark()}] {self.name}'

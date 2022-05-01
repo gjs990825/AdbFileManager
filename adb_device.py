@@ -42,17 +42,71 @@ class AdbDevice:
         def __str__(self):
             return f'({self.name}, {self.type}, {self.is_adb_device})'
 
+    class History:
+        def __init__(self, initial):
+            self.history = [initial]
+            self.current_position = 0
+
+        def dump(self):
+            for i in range(len(self.history)):
+                if i == self.current_position:
+                    print(f'({i}):<{self.history[i]}>')
+                else:
+                    print(f'({i}):{self.history[i]}')
+
+        def able_to_go_back(self):
+            return self.current_position != 0
+
+        def able_to_go_forward(self):
+            return self.current_position != len(self.history) - 1
+
+        def get_current(self):
+            return self.history[self.current_position]
+
+        def get_back_target(self):
+            dummy_current_position = self.current_position
+            if dummy_current_position > 0:
+                dummy_current_position -= 1
+            return self.history[dummy_current_position]
+
+        def go_back(self):
+            if self.current_position > 0:
+                self.current_position -= 1
+                # self.history = self.history[0: self.current_position + 1]
+            return self.get_current()
+
+        def get_forward_target(self):
+            dummy_current_position = self.current_position
+            if dummy_current_position < len(self.history) - 1:
+                dummy_current_position += 1
+            return self.history[dummy_current_position]
+
+        def go_forward(self):
+            if self.current_position < len(self.history) - 1:
+                self.current_position += 1
+            return self.get_current()
+
+        def go(self, to):
+            self.current_position += 1
+            if len(self.history) - 1 < self.current_position:
+                self.history.append(to)
+            else:
+                self.history[self.current_position] = to
+                self.history = self.history[0: self.current_position + 1]
+            return self.get_current()
+
     def __init__(self, device, root_dir='/sdcard/'):
         self.name = device.name
         self.root_dir = root_dir
         self.current_dir = root_dir
         self.children: list[File] = []
+        self.history = AdbDevice.History(root_dir)
         self.enter_folder(root_dir)
 
     def compose_cmd(self, *args):
         return ['adb', '-s', self.name, *args]
 
-    def enter_folder(self, path):
+    def enter_folder(self, path, history=True):
         path = path.replace('\\', '/')
         cmd = self.compose_cmd('shell', 'ls', '-al', wrap_with_single_quotes(path))
 
@@ -65,6 +119,9 @@ class AdbDevice:
         self.current_dir = path
         self.children = [File.from_info(path, line) for line in lines]
 
+        # Only different directory enters history. Might cause problems...
+        if history and self.history.get_current() != path:
+            self.history.go(path)
         return self.children
 
     def enter_sub_folder(self, name):
@@ -72,6 +129,18 @@ class AdbDevice:
             if not child.is_file and child.name == name:
                 return self.enter_folder(child.get_full_path())
         raise FileNotFoundError(f'no folder named "{name}"')
+
+    def go_back(self):
+        back = self.history.get_back_target()
+        self.enter_folder(back, history=False)
+        self.history.go_back()
+        return back
+
+    def go_forward(self):
+        forward = self.history.get_forward_target()
+        self.enter_folder(forward, history=False)
+        self.history.go_forward()
+        return forward
 
     @staticmethod
     def get_adb_devices():
@@ -106,9 +175,7 @@ class AdbDevice:
         return sum(child.size if child.is_file else 0 for child in self.children)
 
     def get_item_count_inside(self, file: File):
-        if not file.is_file:
-            return len(AdbDevice(self.name, file.get_full_path()).children)
-        return -1
+        return -1 if file.is_file else len(AdbDevice(self.name, file.get_full_path()).children)
 
     def pull_file(self, from_dir, to_dir):
         cmd = self.compose_cmd('pull', from_dir, to_dir)
