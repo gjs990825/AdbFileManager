@@ -68,7 +68,10 @@ def explorer(device, root: Tk):
     view_canvas.create_window((0, 0), window=view_scrollable_frame, anchor="nw")
 
     def file_ui_position_generator():
+        view_canvas.update()  # Fix initial size problem
         column_max = floor(view_canvas.winfo_width() / (FILE_ITEM_CONFIG['width']))
+        if column_max < 1:  # Safety concern
+            column_max = 1
         for r in itertools.count(0):
             for c in range(column_max):
                 yield r, c
@@ -197,5 +200,7 @@ def explorer(device, root: Tk):
     button_back.pack(side=LEFT)
     button_forward.pack(side=LEFT)
     address_bar.pack(fill=X, expand=1, side=LEFT)
+
+    enter_with_address_bar_path()
 
     mainloop()
