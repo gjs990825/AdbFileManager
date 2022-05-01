@@ -1,5 +1,6 @@
 import logging
 import subprocess
+from dataclasses import dataclass, field
 
 from file import File
 
@@ -27,9 +28,22 @@ def convert_command_output(out, trim_start=0, trim_end=0):
     return [x.decode('utf-8') for x in lines_bytes]
 
 
+# TODO Go back to last directory(history)
 class AdbDevice:
-    def __init__(self, name, root_dir='/sdcard/'):
-        self.name = name
+    @dataclass(frozen=True)
+    class Device:
+        name: str
+        type: str
+        is_adb_device: bool = field(init=False, repr=False)
+
+        def __post_init__(self):
+            object.__setattr__(self, 'is_adb_device', self.type == 'device')
+
+        def __str__(self):
+            return f'({self.name}, {self.type}, {self.is_adb_device})'
+
+    def __init__(self, device, root_dir='/sdcard/'):
+        self.name = device.name
         self.root_dir = root_dir
         self.current_dir = root_dir
         self.children: list[File] = []
@@ -66,7 +80,7 @@ class AdbDevice:
         if result.returncode != 0:
             raise Exception('adb command execution error')
         devices_str = convert_command_output(result.stdout, trim_start=1, trim_end=2)
-        return [d.split(sep='\t')[0] for d in devices_str]
+        return (AdbDevice.Device(*d.split(sep='\t')) for d in devices_str)
 
     @staticmethod
     def connect_via_network(address):

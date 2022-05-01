@@ -19,13 +19,13 @@ def scrollbar_util(root: Tk):
     root.geometry(f'{w}x{h}')
 
 
-def explorer(device_name, root: Tk):
-    device = AdbDevice(device_name, APP_CONFIG['default_root'])
+def explorer(device, root: Tk):
+    adb_device = AdbDevice(device, APP_CONFIG['default_root'])
     root.title(APP_CONFIG['app_name'])
     root.iconbitmap(APP_CONFIG['icon'])
     root.minsize(*APP_CONFIG['min_size'])
     root.maxsize(*APP_CONFIG['max_size'])
-    root.title(f'{device.name} - {APP_CONFIG["app_name"]}')
+    root.title(f'{adb_device.name} - {APP_CONFIG["app_name"]}')
     root.geometry(APP_CONFIG["default_size"])
 
     header_frame = Frame(root, padx=3, pady=3)
@@ -33,7 +33,7 @@ def explorer(device_name, root: Tk):
     footer_frame = Frame(root)
     footer_frame.pack(fill=X, anchor=S, side=BOTTOM)
 
-    address_bar_text = StringVar(header_frame, device.current_dir)
+    address_bar_text = StringVar(header_frame, adb_device.current_dir)
     footer_text = StringVar(header_frame)
     address_bar = Entry(header_frame, textvariable=address_bar_text, borderwidth=3)
     address_bar.pack(fill=X, expand=1, side=LEFT)
@@ -77,12 +77,12 @@ def explorer(device_name, root: Tk):
     def download_file(file: File):
         target = filedialog.askdirectory()
         if os.path.exists(target):
-            device.pull_file(file.get_full_path(), target)
+            adb_device.pull_file(file.get_full_path(), target)
 
     def delete_file(obj: File):
         result = messagebox.askokcancel('Confirm Deleting', f'{obj.name} will be deleted')
         if result:
-            device.delete_file(obj)
+            adb_device.delete_file(obj)
             enter_path()
 
     def get_file_ui_element(file: File):
@@ -102,7 +102,7 @@ def explorer(device_name, root: Tk):
         if file.is_file:
             info = file.get_readable_size()
         elif FILE_ITEM_CONFIG['show_directory_item_count']:
-            info = f'({device.get_item_count_inside(file)})'
+            info = f'({adb_device.get_item_count_inside(file)})'
         else:
             info = ''
 
@@ -126,7 +126,7 @@ def explorer(device_name, root: Tk):
             item.grid_forget()
         view_items.clear()
 
-        items = device.enter_folder(address_bar_text.get())
+        items = adb_device.enter_folder(address_bar_text.get())
 
         for item in items:
             label = get_file_ui_element(item)
@@ -134,10 +134,10 @@ def explorer(device_name, root: Tk):
             label.grid(row=r_w[0], column=r_w[1], sticky=W)
             view_items.append(label)
 
-        total = device.get_children_count()
-        dir_count = device.get_directory_count_inside_children()
+        total = adb_device.get_children_count()
+        dir_count = adb_device.get_directory_count_inside_children()
         file_count = total - dir_count
-        size = File.parse_readable_size(device.get_children_size_sum())
+        size = File.parse_readable_size(adb_device.get_children_size_sum())
 
         footer_text.set(f'Total {total} item(s), {dir_count} folder(s), {file_count} file(s), {size}')
         scrollbar_util(root)
@@ -154,7 +154,7 @@ def explorer(device_name, root: Tk):
             if not os.path.exists(file):
                 raise FileNotFoundError()
             else:
-                device.push_file(file)
+                adb_device.push_file(file)
                 print(f'File push succeed:{file}')
         enter_path()
 
@@ -163,7 +163,7 @@ def explorer(device_name, root: Tk):
         if not os.path.exists(folder_to_upload):
             raise FileNotFoundError()
         else:
-            device.push_file(folder_to_upload)
+            adb_device.push_file(folder_to_upload)
             print(f'Folder push succeed:{folder_to_upload}')
         enter_path()
 
