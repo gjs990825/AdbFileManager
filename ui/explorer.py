@@ -146,6 +146,11 @@ def explorer(device, root: Tk):
         button_back['state'] = NORMAL if adb_device.history.able_to_go_back() else DISABLED
         button_forward['state'] = NORMAL if adb_device.history.able_to_go_forward() else DISABLED
 
+        if total == 0:
+            label = Label(view_scrollable_frame, text='Empty Directory')
+            label.grid()
+            view_items.append(label)
+
         scrollbar_util(root)
 
     def enter_with_address_bar_path():

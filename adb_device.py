@@ -149,7 +149,7 @@ class AdbDevice:
         if result.returncode != 0:
             raise Exception('adb command execution error')
         devices_str = convert_command_output(result.stdout, trim_start=1, trim_end=2)
-        return (AdbDevice.Device(*d.split(sep='\t')) for d in devices_str)
+        return [AdbDevice.Device(*d.split(sep='\t')) for d in devices_str]
 
     @staticmethod
     def connect_via_network(address):

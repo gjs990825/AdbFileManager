@@ -1,7 +1,7 @@
 APP_CONFIG = {
     'app_name': 'Adb File Manager',
     'icon': 'resources/images/icon.ico',
-    'default_root': '/sdcard/DCIM',
+    'default_root': '/sdcard/',
     'default_size': '800x500',
     'max_size': (1920, 900),
     'min_size': (400, 300),

@@ -14,7 +14,7 @@ if __name__ == '__main__':
     root.title(f'Select a device - {APP_CONFIG["app_name"]}')
     root.iconbitmap(APP_CONFIG['icon'])
 
-    device_buttons: list[Button] = []
+    device_view_items: list[Widget] = []
 
     devices_frame = LabelFrame(root, text='Attached adb devices:', padx=3, pady=3)
     devices_frame.pack(side=BOTTOM, fill=BOTH, expand=1, padx=3, pady=3)
@@ -32,16 +32,21 @@ if __name__ == '__main__':
     def refresh_devices():
         devices = AdbDevice.get_adb_devices()
 
-        for device_button in device_buttons:
-            device_button.pack_forget()
-        device_buttons.clear()
+        for item in device_view_items:
+            item.pack_forget()
+        device_view_items.clear()
 
         for device in devices:
             state = NORMAL if device.is_adb_device else DISABLED
             button = Button(devices_frame, text=f'{device.name} ({device.type})', command=lambda: launch(device),
                             state=state)
             button.pack(fill=X)
-            device_buttons.append(button)
+            device_view_items.append(button)
+
+        if len(devices) == 0:
+            info_label = Label(devices_frame, text='No Device Attached')
+            info_label.pack(fill=BOTH, expand=1)
+            device_view_items.append(info_label)
 
 
     def connect_via_network():
