@@ -19,7 +19,7 @@ def scrollbar_util(root: Tk):
     root.geometry(f'{w}x{h}')
 
 
-def explorer(device, root: Tk):
+def file_explorer(device, root: Tk):
     adb_device = AdbDevice(device, APP_CONFIG['default_root'])
     root.title(APP_CONFIG['app_name'])
     root.iconbitmap(APP_CONFIG['icon'])

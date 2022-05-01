@@ -1,4 +1,5 @@
 import logging
+import shutil
 import subprocess
 from dataclasses import dataclass, field
 
@@ -28,7 +29,12 @@ def convert_command_output(out, trim_start=0, trim_end=0):
     return [x.decode('utf-8') for x in lines_bytes]
 
 
-# TODO Go back to last directory(history)
+adb_path = shutil.which('adb', path='./resources/bin/')
+if adb_path is None:
+    shutil.which('adc')
+print(f'Using adb: {adb_path}')
+
+
 class AdbDevice:
     @dataclass(frozen=True)
     class Device:
@@ -104,7 +110,7 @@ class AdbDevice:
         self.enter_folder(root_dir)
 
     def compose_cmd(self, *args):
-        return ['adb', '-s', self.name, *args]
+        return [adb_path, '-s', self.name, *args]
 
     def enter_folder(self, path, history=True):
         path = path.replace('\\', '/')
@@ -144,7 +150,7 @@ class AdbDevice:
 
     @staticmethod
     def get_adb_devices():
-        cmd = ['adb', 'devices']
+        cmd = [adb_path, 'devices']
         result = command_run(cmd)
         if result.returncode != 0:
             raise Exception('adb command execution error')
@@ -153,14 +159,14 @@ class AdbDevice:
 
     @staticmethod
     def connect_via_network(address):
-        cmd = ['adb', 'connect', address]
+        cmd = [adb_path, 'connect', address]
         result = command_run(cmd)
         if result.returncode != 0:
             raise Exception('adb connection via network failed')
 
     @staticmethod
     def disconnect():
-        cmd = ['adb', 'disconnect']
+        cmd = [adb_path, 'disconnect']
         result = command_run(cmd)
         if result.returncode != 0:
             raise Exception('adb disconnect operation failed')
