@@ -128,7 +128,7 @@ def file_explorer(device, root: Tk):
             item.grid_forget()
         view_items.clear()
 
-        items = adb_device.children
+        items = sorted(adb_device.children, key=lambda obj: (obj.is_file, obj.name))
 
         for item in items:
             label = get_file_ui_element(item)
