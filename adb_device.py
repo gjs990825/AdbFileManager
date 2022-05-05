@@ -38,15 +38,19 @@ print(f'Using adb: {adb_path}')
 class AdbDevice:
     @dataclass(frozen=True)
     class Device:
-        name: str
-        type: str
+        serial: str
+        mode: str
+        product: str
+        model: str
+        device: str
+        transprot_id: int
         is_adb_device: bool = field(init=False, repr=False)
 
         def __post_init__(self):
-            object.__setattr__(self, 'is_adb_device', self.type == 'device')
+            object.__setattr__(self, 'is_adb_device', self.mode == 'device')
 
-        def __str__(self):
-            return f'({self.name}, {self.type}, {self.is_adb_device})'
+        def get_user_friendly_name(self):
+            return f'{self.model} ({self.serial})'
 
     class History:
         def __init__(self, initial):
@@ -102,7 +106,8 @@ class AdbDevice:
             return self.get_current()
 
     def __init__(self, device, root_dir='/sdcard/'):
-        self.name = device.name
+        # self.serial = device.serial
+        self.device = device
         self.root_dir = root_dir
         self.current_dir = root_dir
         self.children: list[File] = []
@@ -110,7 +115,7 @@ class AdbDevice:
         self.enter_folder(root_dir)
 
     def compose_cmd(self, *args):
-        return [adb_path, '-s', self.name, *args]
+        return [adb_path, '-s', self.device.serial, *args]
 
     def enter_folder(self, path, history=True):
         path = path.replace('\\', '/')
@@ -150,12 +155,25 @@ class AdbDevice:
 
     @staticmethod
     def get_adb_devices():
-        cmd = [adb_path, 'devices']
+        cmd = [adb_path, 'devices', '-l']
         result = command_run(cmd)
         if result.returncode != 0:
             raise Exception('adb command execution error')
         devices_str = convert_command_output(result.stdout, trim_start=1, trim_end=2)
-        return [AdbDevice.Device(*d.split(sep='\t')) for d in devices_str]
+        # ['79cc6dd0', 'device', 'product:evolution_raphael', 'model:Redmi_K20_Pro', 'device:raphael', 'transport_id:1']
+        devices = []
+        for d in devices_str:
+            info = d.split()
+            if len(info) == 6:
+                serial = info[0]
+                mode = info[1]
+                product = info[2].split(':')[1]
+                model = info[3].split(':')[1]
+                device = info[4].split(':')[1]
+                transprot_id = int(info[5].split(':')[1])
+                devices.append(AdbDevice.Device(serial, mode, product, model, device, transprot_id))
+
+        return devices
 
     @staticmethod
     def connect_via_network(address):
@@ -181,7 +199,7 @@ class AdbDevice:
         return sum(child.size if child.is_file else 0 for child in self.children)
 
     def get_item_count_inside(self, file: File):
-        return -1 if file.is_file else len(AdbDevice(self.name, file.get_full_path()).children)
+        return -1 if file.is_file else len(AdbDevice(self.device, file.get_full_path()).children)
 
     def pull_file(self, from_dir, to_dir):
         cmd = self.compose_cmd('pull', from_dir, to_dir)
@@ -202,3 +220,7 @@ class AdbDevice:
         if command_run(cmd).returncode != 0:
             raise RuntimeError("delete file(s) failed")
         logging.info('file deleting succeed')
+
+
+if __name__ == '__main__':
+    print(AdbDevice.get_adb_devices())

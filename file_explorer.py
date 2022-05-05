@@ -25,7 +25,7 @@ def file_explorer(device, root: Tk):
     root.iconbitmap(APP_CONFIG['icon'])
     root.minsize(*APP_CONFIG['min_size'])
     root.maxsize(*APP_CONFIG['max_size'])
-    root.title(f'{adb_device.name} - {APP_CONFIG["app_name"]}')
+    root.title(f'{device.get_user_friendly_name()} - {APP_CONFIG["app_name"]}')
     root.geometry(APP_CONFIG["default_size"])
 
     header_frame = Frame(root, padx=3, pady=3)

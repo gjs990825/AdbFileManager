@@ -32,7 +32,7 @@ def device_selection(root: Tk):
 
         for device in devices:
             state = NORMAL if device.is_adb_device else DISABLED
-            button = Button(devices_frame, text=f'{device.name} ({device.type})', command=lambda: launch(device),
+            button = Button(devices_frame, text=device.get_user_friendly_name(), command=lambda: launch(device),
                             state=state)
             button.pack(fill=X)
             device_view_items.append(button)
