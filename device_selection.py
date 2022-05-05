@@ -24,11 +24,17 @@ def device_selection(root: Tk):
         file_explorer(device, root)
 
     def refresh_devices():
-        devices = AdbDevice.get_adb_devices()
-
         for item in device_view_items:
             item.pack_forget()
         device_view_items.clear()
+
+        loading_indicator = Label(devices_frame, text='Loading devices...')
+        loading_indicator.pack()
+        devices_frame.update()
+
+        devices = AdbDevice.get_adb_devices()
+
+        loading_indicator.pack_forget()
 
         for device in devices:
             state = NORMAL if device.is_adb_device else DISABLED
