@@ -31,7 +31,7 @@ def convert_command_output(out, trim_start=0, trim_end=0):
 
 adb_path = shutil.which('adb', path='./resources/bin/')
 if adb_path is None:
-    shutil.which('adb')
+    adb_path = shutil.which('adb')
 print(f'Using adb: {adb_path}')
 
 
