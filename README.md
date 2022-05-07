@@ -17,13 +17,13 @@ You can delete the files under `./resources/bin` if you have Android SDK Platfor
 
 Screenshots
 -----
-Address bar for wireless connection.
+Address bar for wireless connection.  
 ![](docs/images/Snipaste_2022-05-07_19-10-59.png)  
 
-Uploading.
+Uploading.  
 ![](docs/images/Snipaste_2022-05-07_19-14-07.png)   
 
-Deleting.
+Deleting.  
 ![](docs/images/Snipaste_2022-05-07_19-14-49.png)  
 
 
